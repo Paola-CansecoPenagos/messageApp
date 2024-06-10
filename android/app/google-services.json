@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "811456922838",
+    "project_id": "acti-ccb31",
+    "storage_bucket": "acti-ccb31.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:811456922838:android:c0ed053341b49b3e717577",
+        "android_client_info": {
+          "package_name": "com.example.act"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt6s6b1N8rMo7QicsDBqtORgnOmzWuCqM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
