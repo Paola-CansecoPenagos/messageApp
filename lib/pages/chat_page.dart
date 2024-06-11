@@ -96,72 +96,88 @@ class _ChatPageState extends State<ChatPage> {
       },
     );
   }
+  
+Future<void> _sendMessage(ChatMessage chatMessage) async {
+  // Initialize `message` with a default value that will be overwritten
+  Message message = Message(
+    senderID: chatMessage.user.id,
+    content: '',
+    messageType: MessageType.Text,
+    sentAt: Timestamp.now(),
+  );
 
-  Future<void> _sendMessage(ChatMessage chatMessage) async {
-    if (chatMessage.medias?.isNotEmpty ?? false) {
-      if (chatMessage.medias!.first.type == MediaType.image) {
-        Message message = Message(
-          senderID: chatMessage.user.id,
-          content: chatMessage.medias!.first.url,
-          messageType: MessageType.Image,
-          sentAt: Timestamp.fromDate(chatMessage.createdAt),
-        );
-        await _databaseService.sendChatMessage(
-            currentUser!.id, otherUser!.id, message);
-      }
-    } else {
-      Message message = Message(
-        senderID: currentUser!.id,
-        content: chatMessage.text,
-        messageType: MessageType.Text,
+  if (chatMessage.medias?.isNotEmpty ?? false) {
+    if (chatMessage.medias!.first.type == MediaType.image) {
+      message = Message(
+        senderID: chatMessage.user.id,
+        content: chatMessage.medias!.first.url,
+        messageType: MessageType.Image,
         sentAt: Timestamp.fromDate(chatMessage.createdAt),
       );
-      await _databaseService.sendChatMessage(
-        currentUser!.id,
-        otherUser!.id,
-        message,
+    } else if (chatMessage.medias!.first.type == MediaType.video) {
+      message = Message(
+        senderID: chatMessage.user.id,
+        content: chatMessage.medias!.first.url,
+        messageType: MessageType.Video,
+        sentAt: Timestamp.fromDate(chatMessage.createdAt),
       );
     }
+  } else {
+    // Assign `message` for the text case here
+    message = Message(
+      senderID: chatMessage.user.id,
+      content: chatMessage.text,
+      messageType: MessageType.Text,
+      sentAt: Timestamp.fromDate(chatMessage.createdAt),
+    );
   }
 
-  List<ChatMessage> _generateChatMessagesList(List<Message> messages) {
-    List<ChatMessage> chatMessages = messages.map((m) {
-      switch (m.messageType) {
-        case MessageType.Image:
-          return ChatMessage(
-            user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
-            createdAt: m.sentAt!.toDate(),
-            medias: [
-              ChatMedia(
-                url: m.content!,
-                fileName: "",
-                type: MediaType.image,
-              ),
-            ],
-          );
-        case MessageType.Video:
-          return ChatMessage(
-            user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
-            createdAt: m.sentAt!.toDate(),
-            medias: [
-              ChatMedia(
-                url: m.content!,
-                fileName: "",
-                type: MediaType.video,
-              ),
-            ],
-          );
-        default:
-          return ChatMessage(
-            user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
-            text: m.content!,
-            createdAt: m.sentAt!.toDate(),
-          );
-      }
-    }).toList();
-    chatMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return chatMessages;
-  }
+  // Now `message` is guaranteed to be initialized no matter the path taken
+  await _databaseService.sendChatMessage(
+    currentUser!.id, otherUser!.id, message
+  );
+}
+
+
+List<ChatMessage> _generateChatMessagesList(List<Message> messages) {
+  List<ChatMessage> chatMessages = messages.map((m) {
+    switch (m.messageType) {
+      case MessageType.Image:
+        return ChatMessage(
+          user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+          createdAt: m.sentAt!.toDate(),
+          medias: [
+            ChatMedia(
+              url: m.content!,
+              fileName: "",
+              type: MediaType.image,
+            ),
+          ],
+        );
+      case MessageType.Video:
+        return ChatMessage(
+          user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+          createdAt: m.sentAt!.toDate(),
+          medias: [
+            ChatMedia(
+              url: m.content!,
+              fileName: "",
+              type: MediaType.video,
+            ),
+          ],
+        );
+      default:
+        return ChatMessage(
+          user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+          text: m.content!,
+          createdAt: m.sentAt!.toDate(),
+        );
+    }
+  }).toList();
+  chatMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return chatMessages;
+}
+
 
 
   Widget _videoMessageButton() {

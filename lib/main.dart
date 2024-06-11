@@ -11,9 +11,13 @@ import 'package:provider/provider.dart';
 void main() async {
   await setup();
   runApp(
-    MyApp(),
+    Provider(
+      create: (_) => AuthService(),
+      child: MyApp(),
+    ),
   );
 }
+
 
 Future<void> setup() async {
   WidgetsFlutterBinding.ensureInitialized();

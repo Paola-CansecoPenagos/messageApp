@@ -12,6 +12,7 @@ class AuthService {
   AuthService() {
     _firebaseAuth.authStateChanges().listen(authStateChangesStreamListener);
   }
+  
 
   Future<bool> login(String email, String password) async {
     try {
