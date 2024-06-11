@@ -87,6 +87,7 @@ class _ChatPageState extends State<ChatPage> {
             trailing: [
               _mediaMessageButton(),
               _videoMessageButton(),
+              _audioMessageButton(),
             ],
           ),
           currentUser: currentUser!,
@@ -98,7 +99,6 @@ class _ChatPageState extends State<ChatPage> {
   }
   
 Future<void> _sendMessage(ChatMessage chatMessage) async {
-  // Initialize `message` with a default value that will be overwritten
   Message message = Message(
     senderID: chatMessage.user.id,
     content: '',
@@ -122,17 +122,23 @@ Future<void> _sendMessage(ChatMessage chatMessage) async {
         sentAt: Timestamp.fromDate(chatMessage.createdAt),
       );
     }
+    else if (chatMessage.medias!.first.type == MediaType.file) {
+      message = Message(
+        senderID: chatMessage.user.id,
+        content: chatMessage.medias!.first.url,
+        messageType: MessageType.Video,
+        sentAt: Timestamp.fromDate(chatMessage.createdAt),
+      );
+    }
   } else {
-    // Assign `message` for the text case here
-    message = Message(
-      senderID: chatMessage.user.id,
-      content: chatMessage.text,
-      messageType: MessageType.Text,
-      sentAt: Timestamp.fromDate(chatMessage.createdAt),
-    );
-  }
+      message = Message(
+        senderID: chatMessage.user.id,
+        content: chatMessage.text,
+        messageType: MessageType.Text,
+        sentAt: Timestamp.fromDate(chatMessage.createdAt),
+      );
+    }
 
-  // Now `message` is guaranteed to be initialized no matter the path taken
   await _databaseService.sendChatMessage(
     currentUser!.id, otherUser!.id, message
   );
@@ -154,6 +160,7 @@ List<ChatMessage> _generateChatMessagesList(List<Message> messages) {
             ),
           ],
         );
+      
       case MessageType.Video:
         return ChatMessage(
           user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
@@ -163,6 +170,18 @@ List<ChatMessage> _generateChatMessagesList(List<Message> messages) {
               url: m.content!,
               fileName: "",
               type: MediaType.video,
+            ),
+          ],
+        );
+      case MessageType.Audio:
+        return ChatMessage(
+          user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+          createdAt: m.sentAt!.toDate(),
+          medias: [
+            ChatMedia(
+              url: m.content!,
+              fileName: "",
+              type: MediaType.file,
             ),
           ],
         );
@@ -241,6 +260,20 @@ List<ChatMessage> _generateChatMessagesList(List<Message> messages) {
         Icons.image,
         color: Theme.of(context).colorScheme.primary,
       ),
+    );
+  }
+
+    Widget _audioMessageButton() {
+    return IconButton(
+      icon: Icon(Icons.audiotrack, color: Theme.of(context).colorScheme.primary),
+      onPressed: () async {
+        File? audioFile = await _mediaService.pickAudioFile();
+        if (audioFile != null) {
+          String chatID = generateChatID(uid1: currentUser!.id, uid2: otherUser!.id);
+          String? audioURL = await _storageService.uploadAudioToStorage(audioFile: audioFile, chatID: chatID);
+          // Aquí puedes hacer algo con la URL del audio, como enviar un mensaje de chat que contenga la URL
+        }
+      },
     );
   }
 }

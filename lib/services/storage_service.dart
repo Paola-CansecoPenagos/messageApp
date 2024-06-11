@@ -54,4 +54,23 @@ class StorageService {
       },
     );
   }
+
+  Future<String?> uploadAudioToStorage({required File audioFile, required String chatID}) async {
+    try {
+      String fileExtension = p.extension(audioFile.path);
+      Reference storageReference = FirebaseStorage.instance
+          .ref('chats/$chatID/audios')
+          .child('${DateTime.now().toIso8601String()}$fileExtension');
+
+      UploadTask uploadTask = storageReference.putFile(audioFile);
+      TaskSnapshot snapshot = await uploadTask;
+      if (snapshot.state == TaskState.success) {
+        return await storageReference.getDownloadURL();
+      }
+    } catch (e) {
+      print('Error uploading audio file: $e');
+    }
+    return null;
+  }
+
 }
