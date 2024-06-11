@@ -14,4 +14,12 @@ class MediaService {
     }
     return null;
   }
+
+  Future<File?> getVideoFromGallery() async {
+    final XFile? _file = await _picker.pickVideo(source: ImageSource.gallery);
+    if (_file != null) {
+      return File(_file!.path);
+    }
+    return null;
+  }
 }

@@ -86,6 +86,7 @@ class _ChatPageState extends State<ChatPage> {
             alwaysShowSend: true,
             trailing: [
               _mediaMessageButton(),
+              _videoMessageButton(),
             ],
           ),
           currentUser: currentUser!,
@@ -125,31 +126,77 @@ class _ChatPageState extends State<ChatPage> {
 
   List<ChatMessage> _generateChatMessagesList(List<Message> messages) {
     List<ChatMessage> chatMessages = messages.map((m) {
-      if (m.messageType == MessageType.Image) {
-        return ChatMessage(
-          user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
-          createdAt: m.sentAt!.toDate(),
-          medias: [
-            ChatMedia(
-              url: m.content!,
-              fileName: "",
-              type: MediaType.image,
-            ),
-          ],
-        );
-      } else {
-        return ChatMessage(
-          user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
-          text: m.content!,
-          createdAt: m.sentAt!.toDate(),
-        );
+      switch (m.messageType) {
+        case MessageType.Image:
+          return ChatMessage(
+            user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+            createdAt: m.sentAt!.toDate(),
+            medias: [
+              ChatMedia(
+                url: m.content!,
+                fileName: "",
+                type: MediaType.image,
+              ),
+            ],
+          );
+        case MessageType.Video:
+          return ChatMessage(
+            user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+            createdAt: m.sentAt!.toDate(),
+            medias: [
+              ChatMedia(
+                url: m.content!,
+                fileName: "",
+                type: MediaType.video,
+              ),
+            ],
+          );
+        default:
+          return ChatMessage(
+            user: m.senderID == currentUser!.id ? currentUser! : otherUser!,
+            text: m.content!,
+            createdAt: m.sentAt!.toDate(),
+          );
       }
     }).toList();
-    chatMessages.sort((a, b) {
-      return b.createdAt.compareTo(a.createdAt);
-    });
+    chatMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return chatMessages;
   }
+
+
+  Widget _videoMessageButton() {
+  return IconButton(
+    icon: Icon(Icons.videocam, color: Theme.of(context).colorScheme.primary),
+    onPressed: () async {
+      File? videoFile = await _mediaService.getVideoFromGallery(); 
+      if (videoFile != null) {
+        String chatID = generateChatID(
+          uid1: currentUser!.id,
+          uid2: otherUser!.id,
+        );
+        String? downloadURL = await _storageService.uploadMediaToChat(
+          file: videoFile,
+          chatID: chatID,
+          mediaType: MediaType.video,
+        );
+        if (downloadURL != null) {
+          ChatMessage chatMessage = ChatMessage(
+            user: currentUser!,
+            createdAt: DateTime.now(),
+            medias: [
+              ChatMedia(
+                url: downloadURL,
+                fileName: videoFile.path.split('/').last, // Nombre del archivo para referencia
+                type: MediaType.video,
+              )
+            ],
+          );
+          _sendMessage(chatMessage);
+        }
+      }
+    },
+  );
+}
 
   Widget _mediaMessageButton() {
     return IconButton(
