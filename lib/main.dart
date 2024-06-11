@@ -1,76 +1,50 @@
-import 'package:act/firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import '../pages/login_page.dart';
+import '../services/auth_service.dart';
+import '../services/navigation_service.dart';
+import '../utils.dart';
+import 'package:get_it/get_it.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
-import './presentation/screens/login_screen.dart';
 
-Future<void> main() async {
+void main() async {
+  await setup();
+  runApp(
+    MyApp(),
+  );
+}
+
+Future<void> setup() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-);
-  runApp(const MyApp());
+  await setupFirebase();
+  await registerServices();
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final GetIt _getIt = GetIt.instance;
+
+  late NavigationService _navigationService;
+  late AuthService _authService;
+
+  MyApp({super.key}) {
+    _navigationService = _getIt.get<NavigationService>();
+    _authService = _getIt.get<AuthService>();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigationService.navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const LoginScreen(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
         ),
+        useMaterial3: true,
+        textTheme: GoogleFonts.montserratTextTheme(),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), 
+      initialRoute: _authService.user != null ? "/home" : "/login",
+      routes: _navigationService.routes,
     );
   }
 }
